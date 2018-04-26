@@ -5,10 +5,9 @@ equilibrium, to obtain the sample X is compute as described by: <br/>
 Howard Levene - "On a matching problem arising in genetics". <br/>
 Annals of Mathematical Statistics. 1949; 20:91-94.<br/>
 
-If the locus is biallelic, the function perform an Exact test, computing
+If the locus is biallelic, the function performs an Exact test, computing
 the p-value of all possible tables and the summing all p-value<=p(observed
-table). If you have downloaded ternplot (ID: 2299) the routine plots a De
-Finetti's Diagram; if not the routine will try to download it from FEX.
+table) and plots a De Finetti's Diagram.<br/>
 If the locus is m-allelic (m>2), the function uses a Monte Carlo conventional
 method to evaluate the p-value. 
 
