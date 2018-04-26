@@ -195,100 +195,100 @@ if cs==2 %if this is a biallelic locus...
         title('De Finetti''s Diagram')
         legend([h1,h2,h3,h4,h5,h6],'HWP parabola','Lenght=AB frequencies','Lenght=BB frequencies','Lenght=AA frequencies','HW equilibrium (alpha=0.05)','Observed genotypes')
         text(-0.05,0,'AA'); text(1.02,0,'BB'); text(0.485,1.02,'AB')
-    else %if there are more than 2 allelels...
-        %Perform Monte Carlo method
-        if verbose
-            A=cell(1,cs);
-            for I=1:cs
-                A{I}=strcat('A',num2str(I));
-            end
-            disp([blanks(21) 'Observed Genotypes']);
-            disp(tr)
-            disp(array2table(x,'RowNames',A,'VariableNames',A))
-            disp([blanks(15) 'Observed Frequencies and Error']);
-            disp(tr)
-            B=A; B{cs+1}='Error';
-            disp(array2table([fa e],'VariableNames',B))
-            disp([blanks(16) 'Expected Genotypes under HWP']);
-            disp(tr)
-            disp(array2table(xe,'RowNames',A,'VariableNames',A))
-            clear A B
-        end
-        %If observed and expected tables are equal don't perform the Monte
-        %Carlo simulation.
-        if isequal(x,xe)
-            tbs=0;
-            p=1;
-        else
-            %Monte Carlo Naive method
-            %as described in:
-            %Guo SW and Thompson EA. Performing the exact test of
-            %Hardy-Weinberg proportion for multiple alleles.
-            %Biometrics. 1992; 48: 361-372.
-            s=zeros(1,2*N); %gametes array preallocation
-            count=1;
-            for C=1:cs
-                s(count:count+al(C)-1)=C; %construct gametes array
-                count=count+al(C);
-            end
-            %See above for explanation.
-            %costant factor N!/(2N!)
-            f1=sum([gammaln(N+1) -gammaln(2*N+1)]);
-            %costant array prod(alleles!)
-            f2=sum(gammaln(al+ones(size(al))));
-            f=f1+f2;
-            %costant array 2^sum(Heterozygotes)
-            f3=sum(sum(tril(x,-1)))*log(2);
-            %Compute the log(x!) by the gammaln function and sum them
-            f4=sum(sum(gammaln(x+ones(size(x)))));
-            pf=exp(f+f3-f4); %p-value of the observed matrix
-            %tbs=simulation size to ensure that p-value is within delta units of the
-            %true one with (1-alpha)*100% confidence.
-            %Psycometrika 1979; Vol.44:75-83.
-            tbs=round(((-realsqrt(2)*erfcinv(2-alpha))/(2*delta))^2);
-            K=0; %Monte Carlo counter
-            for C=1:tbs
-                %shuffle the gametes array using the Fisher-Yates shuffle
-                %Sattolo's version. This is faster than Matlab RANDPERM: to be
-                %clearer: Fisher-Yates is O(n) while Randperm is O(nlog(n))
-                for J=2*N:-1:2
-                    k=ceil((J-1).*rand);
-                    tmp=s(k);
-                    s(k)=s(J);
-                    s(J)=tmp;
-                end
-                g=zeros(cs,cs); %Construct a new table
-                %This cycle is faster than Matlab ACCUMARRAY and allow the
-                %costruction of a correct matrix. In fact it is possible that
-                %from the permutation some row or column doesn't exist (i.e.
-                %the last homozygote cell is empty and so the matrix isn't a
-                %square matrix). To avoid this occurrence due to ACCUMARRAY
-                %function, you should introduce an IF or SWITCH check, slowing
-                %the execution.
-                for J=1:N
-                    A=s(2*J-1); %take the row index
-                    B=s(2*J); %take the column index
-                    g(A,B)=g(A,B)+1; %add one to the cell
-                end
-                g=tril(g)+triu(g,1)'; %triangularize the matrix
-                %costant array 2^sum(Heterozygotes)
-                f3=sum(sum(tril(g,-1)))*log(2);
-                %Compute the log(x!) by the gammaln function and sum them
-                f4=sum(sum(gammaln(g+ones(size(g)))));
-                pg=exp(f+f3-f4); %compute the p-value of the new matrix
-                if pg<=pf
-                    K=K+1; %update counter
-                end
-            end
-            p=K/tbs; %Monte Carlo p-value
-        end
-        %display results
-        disp('Conventional Monte Carlo Method')
-        disp(tr)
-        disp(array2table([tbs,p],'RowNames',{'Hardy_Weinberg_Proportion'},'VariableNames',{'Tables','p_value'}));
-        fprintf('p-value is within %0.4f units of the true one with %0.4f%% confidence\n',delta,(1-alpha)*100)
-        disp(tr)
     end
+else %if there are more than 2 allelels...
+    %Perform Monte Carlo method
+    if verbose
+        A=cell(1,cs);
+        for I=1:cs
+            A{I}=strcat('A',num2str(I));
+        end
+        disp([blanks(21) 'Observed Genotypes']);
+        disp(tr)
+        disp(array2table(x,'RowNames',A,'VariableNames',A))
+        disp([blanks(15) 'Observed Frequencies and Error']);
+        disp(tr)
+        B=A; B{cs+1}='Error';
+        disp(array2table([fa e],'VariableNames',B))
+        disp([blanks(16) 'Expected Genotypes under HWP']);
+        disp(tr)
+        disp(array2table(xe,'RowNames',A,'VariableNames',A))
+        clear A B
+    end
+    %If observed and expected tables are equal don't perform the Monte
+    %Carlo simulation.
+    if isequal(x,xe)
+        tbs=0;
+        p=1;
+    else
+        %Monte Carlo Naive method
+        %as described in:
+        %Guo SW and Thompson EA. Performing the exact test of
+        %Hardy-Weinberg proportion for multiple alleles.
+        %Biometrics. 1992; 48: 361-372.
+        s=zeros(1,2*N); %gametes array preallocation
+        count=1;
+        for C=1:cs
+            s(count:count+al(C)-1)=C; %construct gametes array
+            count=count+al(C);
+        end
+        %See above for explanation.
+        %costant factor N!/(2N!)
+        f1=sum([gammaln(N+1) -gammaln(2*N+1)]);
+        %costant array prod(alleles!)
+        f2=sum(gammaln(al+ones(size(al))));
+        f=f1+f2;
+        %costant array 2^sum(Heterozygotes)
+        f3=sum(sum(tril(x,-1)))*log(2);
+        %Compute the log(x!) by the gammaln function and sum them
+        f4=sum(sum(gammaln(x+ones(size(x)))));
+        pf=exp(f+f3-f4); %p-value of the observed matrix
+        %tbs=simulation size to ensure that p-value is within delta units of the
+        %true one with (1-alpha)*100% confidence.
+        %Psycometrika 1979; Vol.44:75-83.
+        tbs=round(((-realsqrt(2)*erfcinv(2-alpha))/(2*delta))^2);
+        K=0; %Monte Carlo counter
+        for C=1:tbs
+            %shuffle the gametes array using the Fisher-Yates shuffle
+            %Sattolo's version. This is faster than Matlab RANDPERM: to be
+            %clearer: Fisher-Yates is O(n) while Randperm is O(nlog(n))
+            for J=2*N:-1:2
+                k=ceil((J-1).*rand);
+                tmp=s(k);
+                s(k)=s(J);
+                s(J)=tmp;
+            end
+            g=zeros(cs,cs); %Construct a new table
+            %This cycle is faster than Matlab ACCUMARRAY and allow the
+            %costruction of a correct matrix. In fact it is possible that
+            %from the permutation some row or column doesn't exist (i.e.
+            %the last homozygote cell is empty and so the matrix isn't a
+            %square matrix). To avoid this occurrence due to ACCUMARRAY
+            %function, you should introduce an IF or SWITCH check, slowing
+            %the execution.
+            for J=1:N
+                A=s(2*J-1); %take the row index
+                B=s(2*J); %take the column index
+                g(A,B)=g(A,B)+1; %add one to the cell
+            end
+            g=tril(g)+triu(g,1)'; %triangularize the matrix
+            %costant array 2^sum(Heterozygotes)
+            f3=sum(sum(tril(g,-1)))*log(2);
+            %Compute the log(x!) by the gammaln function and sum them
+            f4=sum(sum(gammaln(g+ones(size(g)))));
+            pg=exp(f+f3-f4); %compute the p-value of the new matrix
+            if pg<=pf
+                K=K+1; %update counter
+            end
+        end
+        p=K/tbs; %Monte Carlo p-value
+    end
+    %display results
+    disp('Conventional Monte Carlo Method')
+    disp(tr)
+    disp(array2table([tbs,p],'RowNames',{'Hardy_Weinberg_Proportion'},'VariableNames',{'Tables','p_value'}));
+    fprintf('p-value is within %0.4f units of the true one with %0.4f%% confidence\n',delta,(1-alpha)*100)
+    disp(tr)
 end
 if verbose
     %Computes the observed heterozygosis (Ho), the expected
