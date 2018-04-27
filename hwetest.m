@@ -145,56 +145,81 @@ if cs==2 %if this is a biallelic locus...
     %display results
     disp(array2table([length(H),p],'RowNames',{'Hardy_Weinberg_Proportion'},'VariableNames',{'Tables','p_value'}));
     if verbose
+        %A De Finetti's diagram is a ternary plot used in population genetics. It is
+        %named after the Italian statistician Bruno de Finetti (1906–1985) and is
+        %used to graph the genotype frequencies of populations, where there are two
+        %alleles and the population is diploid. It is based on an equilateral
+        %triangle, and Viviani's theorem.
+        %Viviani's theorem, named after Vincenzo Viviani, states that the sum of
+        %the distances from any interior point to the sides of an equilateral
+        %triangle equals the length of the triangle's altitude. So, the altitude is
+        %set to 1. The De Finetti's diagram has been put to extensive use in
+        %population genetics by A.W.F. Edwards in his book Foundations of
+        %Mathematical Genetics. In its simplest form the diagram can be used to
+        %show the range of genotype frequencies for which Hardy-Weinberg
+        %equilibrium is satisfied (the curve within the diagram). A.W.F. Edwards
+        %and Chris Cannings extended its use to demonstrate the changes that occur
+        %in allele frequencies under natural selection.
+        
+        %The main triangle must have an altitude = 1 and must be equilater; so the
+        %sides must be 2/3*sqrt(3).
+        f=realsqrt(3); a=f/3; b=2*a;
+        xM=[0 a; a b; b 0];
+        yM=[0 1; 1 0; 0 0];
         hFig=figure;
         units=get(hFig,'units');
         set(hFig,'units','normalized','outerposition',[0 0 1 1], 'Color', 'white');
         set(hFig,'units',units); clear units
-        axis square
         hold on
-        set(gca,'Xlim',[-0.05 1.05],'Ylim',[0 1.1])
-        plot([-0.05 0],[0 0],'Color','w')
-        plot([1 1.05],[0 0],'Color','w')
-        plot([0 0.5],[0 1],'Color','k','Linewidth',1)
-        plot([0.5 1],[1 0],'Color','k','Linewidth',1)
-        passo=0.1:0.1:0.9;
-        xa=0.5.*passo; ya=passo;
-        xb=xa+0.5; yb=1-passo;
-        for I=1:9
-            plot([passo(I) xa(I)],[0 ya(I)],'Color',[169 169 169]./255,'Linewidth',1)
-            plot([passo(I) xb(I)],[0 yb(I)],'Color',[169 169 169]./255,'Linewidth',1)
-            plot([xa(I) 1-xa(I)],[ya(I) ya(I)],'Color',[169 169 169]./255,'Linewidth',1)
-        end
-        clear passo xa xb ya yb
-        if fa(1)>0.5
-            yH=-2*fa(1)+2;
-        elseif fa(1)<0.5
-            yH=2*fa(1);
-        else
-            yH=1;
-        end
-        %           Now plot in red the tables outside the Hardy-Weinberg equilibrium
-        %           and in green the tables inside the Hardy-Weinberg equilibrium.
-        
-        y=cumsum(pg); %the sum of all probability is 1...
-        %Find the interval containing the 95% (or, if you want, find the points where the 2.5% tails starts)
-        xg=linspace(0,1,500);
-        h1=plot(xg,2.*(xg.*(1-xg)),'Color','b','Linewidth',2); %plot the Hardy-Weinberg Parabola (in blue) in a ternary plot
+        plot(xM,yM,'Color','k','Linewidth',2);
+        %normalize the base of the triangle to insert alleles frequencies
+        tick=linspace(0,b,11); ticklabel={'0' '0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1'};
+        set(gca,'XTick',tick,'XTickLabel',ticklabel)
+        %plot the Major ticks
+        passo=tick(2:end-1); clear tick ticklabel xM yM
+        xa=0.5*passo; ya=f.*xa;
+        plot([xa; passo],[ya; zeros(1,9)],'Color',[169 169 169]./255,'Linewidth',1)
+        xb=xa+a; yb=-f.*xb+2;
+        plot([xb; passo],[yb; zeros(1,9)],'Color',[169 169 169]./255,'Linewidth',1)
+        plot([xa; fliplr(xb)],[ya; fliplr(yb)],'Color',[169 169 169]./255,'Linewidth',1)
+        clear passo xa ya xb yb a
+        xg=linspace(0,b,500);
+        %plot the normalized Hardy-Weinberg Parabola (in blue) in a ternary plot
+        h1=plot(xg,2.*(xg.*(b-xg))./b^2,'Color','b','Linewidth',2);
         clear xg
-        norma=linspace(0,yH,length(H));
-        obs=norma(H==x(2));
-        h2=plot([fa(1) fa(1)],[0 obs],'Color','r','Linewidth',2);
-        xp=-2/5*(-2-0.5*fa(1)+obs); yp=-2*xp+2;
-        h3=plot([fa(1) xp],[obs yp],'Color','c','Linewidth',2);
-        xp=2/5*(0.5*fa(1)+obs); yp=2*xp;
-        h4=plot([fa(1) xp],[obs yp],'Color','m','Linewidth',2);
-        h5=plot([fa(1) fa(1)],[norma(find(y<=0.025,1,'last')) norma(find(y>=0.975,1,'first'))],'Color','g','Linewidth',2);
-                %Then put a spot in corrispondence of the observed table.
-        h6=plot(fa(1),obs,'Marker','o','MarkerEdgeColor','k','MarkerFaceColor','y','MarkerSize',6);
-        hold off
+        %normalize fa(1)
+        x1=fa(1)*b;
+        %Normalize the perpendicular to the base
+        %In red the heterozygotes number outside the HWP confidence interval;
+        %in green the heterozygotes number inside the HWP confidence interval;
+        if fa(1)>0.5
+            ht=-f*x1+2;
+        elseif fa(1)<0.5
+            ht=f*x1;
+        else
+            ht=1;
+        end
+        norma=linspace(0,ht,length(H)); clear ht
+        y1=norma(H==x(2));
+        h2=plot([x1 x1],[0 y1],'Color','r','Linewidth',2);
+        y=cumsum(pg);
+        h5=plot([x1 x1],[norma(find(y<=0.025,1,'last')) norma(find(y>=0.975,1,'first'))],'Color','g','Linewidth',2);
+        clear y norma
+        %plot the perpendicular to the left side: its length is AA genotypes frequency
+        xp=0.25*(x1+f*y1); yp=f*xp;
+        h3=plot([x1 xp],[y1 yp],'Color','c','Linewidth',2);
+        %plot the perpendicular to the right side: its length is BB genotypes frequency
+        xp=0.25*(f*(2-y1)+x1); yp=-f*xp+2;
+        h4=plot([x1 xp],[y1 yp],'Color','m','Linewidth',2);
+        clear xp yp f
+        h6=plot(x1,y1,'Marker','o','MarkerEdgeColor','k','MarkerFaceColor','y','MarkerSize',6);
+        clear x1 y1
         set(findobj(hFig, 'type','axes'),'Ycolor','w') %turn-off y axis
-        title('De Finetti''s Diagram')
-        legend([h1,h2,h3,h4,h5,h6],'HWP parabola','Lenght=AB frequencies','Lenght=BB frequencies','Lenght=AA frequencies','HW equilibrium (alpha=0.05)','Observed genotypes')
-        text(-0.05,0,'AA'); text(1.02,0,'BB'); text(0.485,1.02,'AB')
+        text(b/2-0.11,1.05,'De Finetti''s Diagram','FontWeight','Bold','FontSize',14)
+        legend([h1,h2,h3,h4,h5,h6],'HWP parabola','Lenght=AB frequencies','Lenght=AA frequencies','Lenght=BB frequencies','HW equilibrium (alpha=0.05)','Observed genotypes')
+        text(-0.03,0,'AA'); text(b+0.01,0,'BB'); text(b/2-0.008,1.02,'AB')
+        axis tight
+        hold off
     end
 else %if there are more than 2 allelels...
     %Perform Monte Carlo method
