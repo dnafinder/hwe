@@ -177,11 +177,18 @@ if cs==2 %if this is a biallelic locus...
         set(gca,'XTick',tick,'XTickLabel',ticklabel)
         %plot the Major ticks
         passo=tick(2:end-1); clear tick ticklabel xM yM
-        xa=0.5*passo; ya=f.*xa;
-        plot([xa; passo],[ya; zeros(1,9)],'Color',[169 169 169]./255,'Linewidth',1)
+        xa=0.5*passo; ya=f.*xa; c=[169 169 169]./255;
+        plot([xa; passo],[ya; zeros(1,9)],'Color',c,'Linewidth',1)
         xb=xa+a; yb=-f.*xb+2;
-        plot([xb; passo],[yb; zeros(1,9)],'Color',[169 169 169]./255,'Linewidth',1)
-        plot([xa; fliplr(xb)],[ya; fliplr(yb)],'Color',[169 169 169]./255,'Linewidth',1)
+        plot([xb; passo],[yb; zeros(1,9)],'Color',c,'Linewidth',1)
+        plot([xa; fliplr(xb)],[ya; fliplr(yb)],'Color',c,'Linewidth',1)
+        %plot the Minor ticks
+        passo=diff(passo(1:2))/2+[0 passo];
+        xa=0.5*passo; ya=f.*xa; c=[222 184 135]./255;
+        plot([xa; passo],[ya; zeros(1,10)],'Color',c,'Linewidth',1,'LineStyle','--')
+        xb=xa+a; yb=-f.*xb+2;
+        plot([xb; passo],[yb; zeros(1,10)],'Color',c,'Linewidth',1,'LineStyle','--')
+        plot([xa; fliplr(xb)],[ya; fliplr(yb)],'Color',c,'Linewidth',1,'LineStyle','--')
         clear passo xa ya xb yb a
         xg=linspace(0,b,500);
         %plot the normalized Hardy-Weinberg Parabola (in blue) in a ternary plot
